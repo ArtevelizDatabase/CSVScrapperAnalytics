@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Enhanced CSV Data Visualizer with Top Authors, Categories, and Themes">
+    <title>Arte Data CSV - Enhanced</title>
+    
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff6b6b'><path d='M3 3h18v18H3V3zm2 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z'/></svg>">
+</head>
+<body>
+    <button id="themeToggleBtn" class="theme-toggle">
+        <i class="fas fa-moon"></i>
+        <span>Toggle Theme</span>
+    </button>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitleSvg">
+                            <title id="logoTitleSvg">CSV Data Visualizer</title>
+                            <path d="M3 3h18v18H3V3zm2 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Arte Data CSV - Enhanced</h1>
+                    </div>
+                </div>
+                <div class="header-stats hidden" id="headerStats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalRecords">0</span>
+                        <span class="stat-label">Records</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalProducts">0</span>
+                        <span class="stat-label">Products</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalCategories">0</span>
+                        <span class="stat-label">Categories</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection" role="region" aria-labelledby="uploadHeading">
+                <div class="upload-card">
+                    <!-- Upload UI will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Statistics Section (Top Authors, Categories, Themes) -->
+            <section class="statistics-section hidden" id="statisticsSection" role="region" aria-labelledby="statisticsHeading">
+                <div class="section-header">
+                    <h2 id="statisticsHeading">Data Statistics</h2>
+                    <div class="section-subtitle">Top insights from your CSV data</div>
+                </div>
+                
+                <!-- Layout Toggle Button -->
+                <div class="layout-toggle">
+                    <button id="layoutToggleBtn" class="layout-toggle-btn">
+                        <i class="fas fa-th-large"></i>
+                        <span>Switch to Horizontal Layout</span>
+                    </button>
+                </div>
+                
+                <div class="statistics-grid" id="statisticsGrid">
+                    <div class="accordion">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <i class="fas fa-user icon-blue"></i>
+                                <h3>Top Authors</h3>
+                            </div>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="tag-list" id="authors-list">
+                                <p>Loading authors...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <i class="fas fa-folder icon-green"></i>
+                                <h3>Top Categories</h3>
+                            </div>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="tag-list" id="categories-list">
+                                <p>Loading categories...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion">
+                        <div class="accordion-header">
+                            <div class="accordion-title">
+                                <i class="fas fa-palette icon-red"></i>
+                                <h3>Top Themes</h3>
+                            </div>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="tag-list" id="themes-list">
+                                <p>Loading themes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters Section -->
+            <section class="filters-section hidden" id="filtersSection" role="region" aria-labelledby="filterHeading">
+                <div class="section-header">
+                    <h2 id="filterHeading">Filter & Analyze</h2>
+                    <div class="section-subtitle">Customize your data view</div>
+                </div>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label" for="statusFilter">Status Filter</label>
+                        <select id="statusFilter" class="filter-select"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="productFilter">Search Product Names</label>
+                        <input id="productFilter" class="filter-input" placeholder="Search in product names..." />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label" for="categoryFilter">Search Categories</label>
+                        <input id="categoryFilter" class="filter-input" placeholder="Search categories..." />
+                    </div>
+                    <div class="filter-actions">
+                        <button id="applyFiltersButton" class="btn btn-primary">
+                            <i class="fas fa-filter"></i>
+                            Apply Filters
+                        </button>
+                        <button id="resetFiltersButton" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-section hidden" id="previewSection" role="region" aria-labelledby="previewHeading">
+                <div class="section-header">
+                    <h2 id="previewHeading">Data Preview</h2>
+                    <div class="section-subtitle">A snapshot of your dataset</div>
+                </div>
+                <div class="table-container">
+                    <div class="table-wrapper">
+                        <table id="csvTable" class="data-table" aria-labelledby="previewHeading">
+                            <thead id="tableHeaders"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-controls" id="paginationControls"></div>
+                </div>
+            </section>
+
+            <!-- Visualizations Section -->
+            <section class="visualizations-section hidden" id="visualizationsSection" role="region" aria-labelledby="insightsHeading">
+                <div class="section-header">
+                    <h2 id="insightsHeading">Data Insights</h2>
+                    <div class="section-subtitle">Comprehensive data visualizations with colorful analytics</div>
+                </div>
+                
+                <div class="charts-grid charts-grid-tidy">
+                    <div class="chart-card chart-card-tidy">
+                        <div class="chart-header">
+                            <h3>Top 20 Users by Number of Products</h3>
+                            <div class="chart-type">Bar Chart</div>
+                        </div>
+                        <div class="chart-container chart-container-tidy">
+                            <canvas id="topUsersChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card chart-card-tidy">
+                        <div class="chart-header">
+                            <h3>Top 20 Most Uploaded Product Titles</h3>
+                            <div class="chart-type">Bar Chart</div>
+                        </div>
+                        <div class="chart-container chart-container-tidy">
+                            <canvas id="topProductTitlesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card chart-card-tidy">
+                        <div class="chart-header">
+                            <h3>Percentage of Products by Top 10 Users</h3>
+                            <div class="chart-type">Pie Chart</div>
+                        </div>
+                        <div class="chart-container chart-container-tidy">
+                            <canvas id="userPercentageChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card chart-card-tidy">
+                        <div class="chart-header">
+                            <h3>Product Status Distribution</h3>
+                            <div class="chart-type">Column Chart</div>
+                        </div>
+                        <div class="chart-container chart-container-tidy">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card chart-card-tidy chart-card-wide">
+                        <div class="chart-header">
+                            <h3>Category Distribution</h3>
+                            <div class="chart-type">Doughnut Chart</div>
+                        </div>
+                        <div class="chart-container chart-container-tidy">
+                            <canvas id="categoriesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card chart-card-wide">
+                        <div class="chart-header">
+                            <h3>Top 20 Users by Unique Products</h3>
+                            <div class="chart-type">Bar Chart</div>
+                        </div>
+                        <div class="chart-container chart-container-tidy">
+                            <canvas id="uniqueProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip">
+        <div class="tooltip-header">
+            <h4 id="tooltip-title" class="tooltip-title"></h4>
+            <p id="tooltip-count" class="tooltip-count"></p>
+        </div>
+        <div id="tooltip-items" class="tooltip-items"></div>
+    </div>
+
+    <!-- Item Popup -->
+    <div id="item-popup" class="item-popup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3 id="popup-title" class="popup-title"></h3>
+                <p id="popup-author" class="popup-author"></p>
+                <p id="popup-category" class="popup-category"></p>
+                <div id="popup-subcategories-container" class="popup-subcategories-container">
+                    <div id="popup-subcategories" class="popup-subcategories"></div>
+                </div>
+                <button id="close-popup" class="close-popup">&times;</button>
+            </div>
+            <div class="popup-body">
+                <a id="popup-link" class="popup-link" href="#" target="_blank">
+                    <i class="fas fa-external-link-alt"></i>
+                    View Item
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/charts/chart1.js"></script>
+    <script src="js/charts/chart2.js"></script>
+    <script src="js/charts/chart3.js"></script>
+    <script src="js/charts/chart4.js"></script>
+    <script src="js/charts/chart5.js"></script>
+    <script src="js/charts/chart6.js"></script>
+    <script src="js/tooltip.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
